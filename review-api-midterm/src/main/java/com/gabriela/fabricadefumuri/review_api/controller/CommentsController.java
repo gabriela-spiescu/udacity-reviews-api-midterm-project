@@ -26,34 +26,63 @@ import com.gabriela.fabricadefumuri.review_api.repository.ReviewMongoRepository;
 @RequestMapping("/comments")
 public class CommentsController {
 
-    // TODO: Wire needed JPA repositories here
+    @Autowired private ReviewRepository reviewRepository;
+    @Autowired private CommentRepository commentRepository;
+    
+    @Autowired private ReviewMongoRepository reviewMongoRepository;
+    @Autowired private CommentMongoRepository commentMongoRepository;
 
     /**
-     * Creates a comment for a review.
-     *
-     * 1. Add argument for comment entity. Use {@link RequestBody} annotation.
-     * 2. Check for existence of review.
-     * 3. If review not found, return NOT_FOUND.
-     * 4. If found, save comment.
+     * Creates {@link Comment} for a {@link Review}.
      *
      * @param reviewId The id of the review.
+     * @param comment The comment to create.
+     * @return the created comment or NOT_FOUND if review is not found.
      */
     @RequestMapping(value = "/reviews/{reviewId}", method = RequestMethod.POST)
-    public ResponseEntity<?> createCommentForReview(@PathVariable("reviewId") Integer reviewId) {
-        throw new HttpServerErrorException(HttpStatus.NOT_IMPLEMENTED);
+    public ResponseEntity<Comment> createCommentForReview(@PathVariable("reviewId") Integer reviewId, @RequestBody Comment comment) {
+    	createCommentForReviewMongo(reviewId,comment);
+    	Optional<Review> optional = reviewRepository.findById(reviewId);
+        if (optional.isPresent()) {
+            comment.setReviewId(reviewId);
+            Review review = optional.get();
+            List<Comment> comments = review.getComments();
+            comments.add(comment);
+            review.setComments(comments);
+            reviewRepository.save(review);
+            return ResponseEntity.ok(commentRepository.save(comment));
+            
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    private void createCommentForReviewMongo(Integer reviewId,Comment comment) {
+    	Optional<Review> optional = reviewMongoRepository.findById(reviewId);
+        if (optional.isPresent()) {
+            comment.setReviewId(reviewId);
+            Review review = optional.get();
+            List<Comment> comments = review.getComments();
+            comments.add(comment);
+            review.setComments(comments);
+            reviewMongoRepository.save(review);
+            commentMongoRepository.save(comment);
+        }
     }
 
     /**
-     * List comments for a review.
-     *
-     * 2. Check for existence of review.
-     * 3. If review not found, return NOT_FOUND.
-     * 4. If found, return list of comments.
+     * List {@link Comment}s for a {@link Review}.
      *
      * @param reviewId The id of the review.
+     * @return The list of comments.
      */
-    @RequestMapping(value = "/reviews/{reviewId}", method = RequestMethod.GET)
-    public List<?> listCommentsForReview(@PathVariable("reviewId") Integer reviewId) {
-        throw new HttpServerErrorException(HttpStatus.NOT_IMPLEMENTED);
+    @RequestMapping(value = "/reviews/{reviewId}/{isMysql}", method = RequestMethod.GET)
+    public ResponseEntity<List<Comment>> listCommentsForReview(@PathVariable("reviewId") Integer reviewId, @PathVariable("isMysql") Boolean isMysql) {
+        if (isMysql) {
+        	return ResponseEntity.ok(commentRepository.findAllByReviewId(reviewId));
+        } else {
+        	return ResponseEntity.ok(reviewMongoRepository.findById(reviewId).get().getComments());
+        }
+    	
     }
 }

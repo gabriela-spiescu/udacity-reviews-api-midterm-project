@@ -24,29 +24,34 @@ import com.gabriela.fabricadefumuri.review_api.repository.ProductMongoRepository
 @RequestMapping("/products")
 public class ProductsController {
 
-    // TODO: Wire JPA repositories here
+    private ProductRepository productRepository;
+    @Autowired private ProductMongoRepository repo;
 
-    /**
-     * Creates a product.
-     *
-     * 1. Accept product as argument. Use {@link RequestBody} annotation.
-     * 2. Save product.
-     */
-    @RequestMapping(value = "/", method = RequestMethod.POST)
-    @ResponseStatus(HttpStatus.CREATED)
-    public void createProduct() {
-        throw new HttpServerErrorException(HttpStatus.NOT_IMPLEMENTED);
+    public ProductsController(ProductRepository productRepository) {
+        this.productRepository = productRepository;
     }
 
     /**
-     * Finds a product by id.
+     * Creates a {@link Product} entity.
+     *
+     * @param product The {@link Product} to create.
+     */
+    @RequestMapping(value = "/", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.CREATED)
+    public void createProduct(@RequestBody Product product) {
+    	repo.save(product);
+        productRepository.save(product);
+    }
+
+    /**
+     * Finds a {@link Product} by id.
      *
      * @param id The id of the product.
      * @return The product if found, or a 404 not found.
      */
     @RequestMapping(value = "/{id}")
-    public ResponseEntity<?> findById(@PathVariable("id") Integer id) {
-        throw new HttpServerErrorException(HttpStatus.NOT_IMPLEMENTED);
+    public ResponseEntity<Product> findById(@PathVariable("id") Integer id) {
+        return ResponseEntity.of(productRepository.findById(id));
     }
 
     /**
@@ -55,7 +60,9 @@ public class ProductsController {
      * @return The list of products.
      */
     @RequestMapping(value = "/", method = RequestMethod.GET)
-    public List<?> listProducts() {
-        throw new HttpServerErrorException(HttpStatus.NOT_IMPLEMENTED);
+    public List<Product> listProducts() {
+    	List<Product> result = new ArrayList<Product>();
+        productRepository.findAll().iterator().forEachRemaining(result::add);
+        return result;
     }
 }
