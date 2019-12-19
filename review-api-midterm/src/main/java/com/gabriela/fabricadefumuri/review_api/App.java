@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @SpringBootApplication()
+@EnableMongoRepositories(basePackages = "com.gabriela.fabricadefumuri.review_api.repository")
+@EnableJpaRepositories(basePackages = "com.gabriela.fabricadefumuri.review_api.crud_repository")
+@EnableAutoConfiguration
 public class App {
 	
     public static void main( String[] args ) {
